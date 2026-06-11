@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+.next/
+out/
+dist/
+*.log
+.pnpm-store/
+
+# Env
+.env
+.env.local
+*.local
+
+# OS / Editors
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Build artifacts
+/uploads/
+/tmp/
+
+# Ollama (project-local install)
+.ollama/
