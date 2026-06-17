@@ -9,38 +9,42 @@
 └───────────────────────────────┘    └───────────────────────┘    └────────────────────┘
 ```
 
-## 演示
-
-完整流程演示（登录 → 上传 → 流式分析 → 模拟面试 → 评估报告）：
-
-<video src="assets/demonstration.mp4" controls width="800" muted playsinline></video>
-
-> GitHub 不渲染 `<video>` 标签时，可以直接[下载视频文件](assets/demonstration.mp4)观看。
-
-## 前端：编辑室美学
-
-视觉语言对应"AI 给简历做批注"这件事本身：
-
-- **配色**：奶油纸 `#F5F2E9` / 墨黑 `#1A1612` / 校对红 `#C8362B` / 蓝铅笔 `#1E3A8A` / 高亮琥珀 `#C58A2E`
-- **字体**：`Fraunces`（带 opsz 与 SOFT 轴的 variable serif）作 display / `Inter Tight` 正文 / `JetBrains Mono` 标签与数字；display 默认关 swsh，hero 处用 `font-display-swash` 选择性打开
-- **三个核心页面**：
-  - `/login` — 50/50：左半屏是一份正在被实时校对的简历样张（AI 编辑逐句打字，再用红色波浪线、红色椭圆圈、琥珀高亮、删除线四种 mark 配上 margin note 标注）；右半屏极简登录表单
-  - `/` — 上传页 hero "Drop your résumé. The editor will be in shortly."；drop-zone 包成黑色"INK-01 稿件登记表"，右栏是流程编号 01 / 02 / 03
-  - `/analyze/[id]` — 50/50：左侧带行号的简历原稿预览，右侧 Edits / Questions tab；**hover 一条改进建议时左侧自动滚到对应行 + 琥珀高亮 + 红色波浪线**
-
-设计 token 在 `frontend/app/globals.css`。
-
 ## 功能特性
 
-### 简历分析
-- **拖拽上传**：PDF / DOCX / TXT / MD，自动解析为纯文本
+三个核心页面：登录 → 上传 → 分析（含模拟面试入口）。
+
+### 登录页
+
+![登录页](assets/login.png)
+
+50/50 布局。左半屏是一份正在被实时校对的简历样张：AI 编辑逐句打字，再用红色波浪线、红色椭圆圈、琥珀高亮、删除线四种 mark 配上 margin note 标注，把产品要做的事直接演示给你看。右半屏是极简登录表单。
+
+### 上传页
+
+![上传页](assets/upload.png)
+
+落地后第一屏就是 drop-zone，拖拽或点击上传 PDF / DOCX / TXT / MD，最大 10 MB。右栏列出整个流程的三步编号 01 / 02 / 03，让用户对接下来要发生的事有预期。
+
+- **拖拽上传**：四种格式自动解析为纯文本（PDF 用 pypdf，DOCX 用 python-docx）
+- **数据不出机**：文件交给本机 Ollama 解析，不上传到云端
+- **解析容错**：PDF 单页解析失败软降级，保住其余页
+
+### 分析页
+
+![分析页](assets/analyse.png)
+
+50/50 联动：左侧是带行号的简历原稿预览，右侧是 `Edits` / `Questions` 两个 tab。
+
 - **结构化抽取**：先把简历变成 JSON（教育 / 工作 / 项目 / 技能）
-- **改进建议**：按优先级输出原文 → 建议 → 改写理由
-- **面试题预测**：按难度（简单 / 中等 / 困难）分组，附答题提示
-- **流式渲染**：后端用 NDJSON 逐条推送，前端边出边渲染
+- **改进建议**（Edits）：按优先级（heavy edit / polish / tidy）输出原文 → 建议 → 改写理由；hover 一条建议时左侧原稿自动滚到对应行并高亮
+- **面试题预测**（Questions）：按难度（warm-up / on the record / defend it）分组，附答题提示
+- **流式渲染**：后端用 NDJSON 逐条推送，前端边出边渲染，不用等齐
 - **抗幻觉**：token-Jaccard grounding 校验 + 强约束提示词，丢弃简历中找不到原文的建议
 
-### 模拟面试 Agent
+### 模拟面试
+
+分析完成后点右上角 **Sit for the panel**，选题数（3 / 5 / 8 / 10）和难度（cordial / probing / adversarial），进入多轮面试。
+
 - **简历驱动出题**：基于简历真实内容生成 3-10 道主问题，每题预绑定 2 道追问
 - **逐题流式评分**：提交答案后立即开始评估，分数动画 + 反馈 + 参考答案
 - **综合评估报告**：综评分数、分类得分、优势 / 改进 双栏建议
@@ -136,25 +140,6 @@ resume-analyse/
               │                          │  generate report (流式)     │
               └──────────────────────────┴─────────────────────────────┘
 ```
-
-### Agent 设计要点
-
-**1. 流式 NDJSON 是产品体验的关键**
-
-后端用 Ollama 的 `stream=True`，前端用 `getReader()` + `TextDecoder` 按 `\n` 切割，**每完成一个 JSON 对象就立即推送**。用户体感：
-- 上传后 5-10 秒看到第一题（其余题目用户读题时已在后台生成）
-- 提交答案后立即看到"评估中…"shimmer，约 5-15 秒分数动画弹出
-- 报告页综评先到 → 优势/改进逐条蹦 → 类别得分 progress bar 渐进填满
-
-**2. 抗幻觉三件套（路径里的 A/C/E）**
-
-- **A**：原文窗口扩到全文（不再截断 1500 字），第二步 LLM 直接看完整简历
-- **C**：`services/grounding.py` 做 token-Jaccard 校验，丢弃简历中找不到原文的建议
-- **E**：提示词加 GOOD/BAD few-shot 示例，"宁缺毋滥"代替"必出 5-10 条"
-
-**3. 状态机与持久化**
-
-会话状态全部保存在进程内 `_Store` 单例里（线程安全的 RLock 字典）。MVP 阶段重启即丢——这是已知行为，PostgreSQL 在路线图里。
 
 ---
 
