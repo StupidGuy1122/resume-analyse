@@ -190,7 +190,7 @@ export default function AnalysisPage() {
     <main className="mx-auto flex h-[calc(100dvh-3rem)] max-w-[1600px] flex-col px-6 lg:px-10">
       {/* Top bar */}
       <header className="flex flex-shrink-0 items-center justify-between gap-4 border-b border-foreground/30 py-4">
-        <Button asChild variant="ghost" size="sm" className="font-mono text-[11px] uppercase tracking-[0.22em]">
+        <Button asChild variant="ghost" size="sm" className="font-mono text-[13px] uppercase tracking-[0.16em]">
           <Link href="/">
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             Back to desk
@@ -198,9 +198,9 @@ export default function AnalysisPage() {
         </Button>
 
         <div className="flex items-center gap-5">
-          <div className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+          <div className="flex items-center gap-2 font-mono text-[13px] uppercase tracking-[0.16em] text-muted-foreground">
             {inFlight ? (
-              <Loader2 className="h-3 w-3 animate-spin text-proof" />
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-proof" />
             ) : stage === "all:done" ? (
               <span className="h-1.5 w-1.5 rounded-full bg-foreground" />
             ) : stage === "error" ? (
@@ -224,7 +224,7 @@ export default function AnalysisPage() {
       )}
 
       {/* 50/50 split */}
-      <div className="grid flex-1 grid-cols-1 gap-0 overflow-hidden lg:grid-cols-2">
+      <div className="grid flex-1 grid-cols-1 gap-0 overflow-hidden lg:grid-cols-[minmax(0,1fr)_28px_minmax(0,1fr)]">
         {/* LEFT — manuscript / preview */}
         <ManuscriptPane
           resumeMeta={resumeMeta}
@@ -232,10 +232,13 @@ export default function AnalysisPage() {
           activeSuggestion={activeSuggestion}
         />
 
+        {/* GUTTER — typesetter's strip between galley and proofs */}
+        <Gutter />
+
         {/* RIGHT — proofs + questions */}
-        <section className="flex h-full flex-col overflow-hidden border-foreground/30 lg:border-l">
-          {/* Tab strip */}
-          <div className="flex flex-shrink-0 items-stretch border-b border-foreground/30">
+        <section className="flex h-full flex-col overflow-hidden">
+          {/* Tab strip — same h-14 as the manuscript pane header on the left */}
+          <div className="flex h-14 flex-shrink-0 items-stretch border-b border-foreground/30">
             <TabButton
               active={tab === "suggestions"}
               onClick={() => setTab("suggestions")}
@@ -248,10 +251,10 @@ export default function AnalysisPage() {
               label="Questions"
               count={questions.length}
             />
-            <div className="flex-1 border-l border-foreground/30 px-5 text-right font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              <span className="block py-3">
+            <div className="flex flex-1 items-center justify-end border-l border-foreground/30 px-5 text-right text-muted-foreground">
+              <span className="font-display text-[13px] italic leading-snug">
                 {tab === "suggestions"
-                  ? "Hover an edit · the original highlights on the left."
+                  ? "Hover an edit — the original highlights on the left."
                   : "Drafted from your manuscript."}
               </span>
             </div>
@@ -293,7 +296,7 @@ export default function AnalysisPage() {
                       stage === "interview:start" ||
                       stage === "interview:done" ||
                       stage === "all:done") && (
-                      <p className="px-5 py-10 text-center font-mono text-[12px] uppercase tracking-[0.22em] text-muted-foreground">
+                      <p className="px-5 py-10 text-center font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
                         No marks · this manuscript reads clean.
                       </p>
                     )}
@@ -364,28 +367,28 @@ function ManuscriptPane({
 
   return (
     <section className="flex h-full flex-col overflow-hidden bg-card">
-      {/* Filename / view toggle */}
-      <header className="flex flex-shrink-0 items-center justify-between border-b border-foreground/30 px-6 py-3">
-        <div className="min-w-0">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-proof">
+      {/* Filename / view toggle — fixed-height row to align with right pane's tab strip */}
+      <header className="flex h-14 flex-shrink-0 items-center justify-between gap-4 border-b border-foreground/30 px-6">
+        <div className="flex min-w-0 items-baseline gap-3">
+          <p className="font-mono text-[13px] uppercase tracking-[0.16em] text-proof">
             Manuscript
           </p>
-          <p className="mt-0.5 truncate font-display text-[16px] text-foreground">
+          <p className="truncate font-display text-[16px] text-foreground">
             {resumeMeta?.filename ?? "—"}
           </p>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-shrink-0 items-center gap-4">
           {resumeMeta && (
-            <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            <span className="font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
               {resumeMeta.charCount.toLocaleString()} ch · {lines.length} ln
             </span>
           )}
-          <div className="flex border border-foreground/40 font-mono text-[10px] uppercase tracking-[0.22em]">
+          <div className="flex border border-foreground/40 font-mono text-[12px] uppercase tracking-[0.16em]">
             <button
               type="button"
               onClick={() => setView("text")}
               className={cn(
-                "px-2.5 py-1 transition-colors",
+                "px-3 py-1.5 transition-colors",
                 view === "text"
                   ? "bg-foreground text-background"
                   : "text-muted-foreground hover:text-foreground",
@@ -397,7 +400,7 @@ function ManuscriptPane({
               type="button"
               onClick={() => setView("raw")}
               className={cn(
-                "border-l border-foreground/40 px-2.5 py-1 transition-colors",
+                "border-l border-foreground/40 px-3 py-1.5 transition-colors",
                 view === "raw"
                   ? "bg-foreground text-background"
                   : "text-muted-foreground hover:text-foreground",
@@ -460,7 +463,7 @@ function ManuscriptPane({
       </div>
 
       {/* Foot */}
-      <footer className="flex flex-shrink-0 items-center justify-between border-t border-foreground/30 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+      <footer className="flex flex-shrink-0 items-center justify-between border-t border-foreground/30 px-6 py-3 font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
         <span>Galley · proof copy</span>
         <span>{suggestions.length > 0 ? `${suggestions.length} marks pending` : "—"}</span>
       </footer>
@@ -491,6 +494,41 @@ function Highlight({ text, needle }: { text: string; needle: string }) {
 /* Bits                                                                      */
 /* ------------------------------------------------------------------------ */
 
+/**
+ * The vertical strip between manuscript (left) and proofs (right).
+ *
+ * Reads as a typesetter's gutter: a hairline rule on each edge with a
+ * register mark stamped at the optical centre and a faint repeating tick
+ * pattern down the rest. Hidden on mobile (the layout collapses to one col).
+ */
+function Gutter() {
+  return (
+    <div
+      aria-hidden
+      className="relative hidden h-full lg:block"
+      style={{
+        backgroundImage:
+          "linear-gradient(to bottom, hsl(var(--rule-light)) 0, hsl(var(--rule-light)) 4px, transparent 4px, transparent 12px)",
+        backgroundSize: "1px 12px",
+        backgroundRepeat: "repeat-y",
+        backgroundPosition: "center top",
+      }}
+    >
+      {/* Edge hairlines */}
+      <span className="pointer-events-none absolute inset-y-0 left-0 w-px bg-foreground/15" />
+      <span className="pointer-events-none absolute inset-y-0 right-0 w-px bg-foreground/15" />
+
+      {/* Top + bottom tick markers */}
+      <div className="absolute left-1/2 top-3 -translate-x-1/2 font-mono text-[9px] tracking-[0.16em] text-muted-foreground/70">
+        ✕
+      </div>
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 font-mono text-[9px] tracking-[0.16em] text-muted-foreground/70">
+        ✕
+      </div>
+    </div>
+  );
+}
+
 function TabButton({
   active,
   onClick,
@@ -507,17 +545,17 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={cn(
-        "group flex items-baseline gap-2 px-5 py-3 transition-colors",
+        "group flex items-center gap-2 px-6 transition-colors",
         active
           ? "bg-foreground text-background"
           : "text-muted-foreground hover:text-foreground",
       )}
     >
-      <span className="font-mono text-[11px] uppercase tracking-[0.22em]">{label}</span>
+      <span className="font-mono text-[13px] uppercase tracking-[0.16em]">{label}</span>
       {count > 0 && (
         <span
           className={cn(
-            "font-mono text-[10px] tabular-nums",
+            "font-mono text-[12px] tabular-nums",
             active ? "text-background/70" : "text-proof",
           )}
         >
@@ -530,7 +568,7 @@ function TabButton({
 
 function StreamingHint({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-3 border-t border-dashed border-border px-5 py-4 font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+    <div className="flex items-center gap-3 border-t border-dashed border-border px-5 py-4 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
       <Loader2 className="h-3 w-3 animate-spin text-proof" />
       <span className="shimmer-text">{label}</span>
     </div>
@@ -540,7 +578,7 @@ function StreamingHint({ label }: { label: string }) {
 function ErrorState({ message }: { message: string }) {
   return (
     <div className="m-5 border-l-2 border-proof bg-proof/[0.06] p-5">
-      <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-proof">
+      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-proof">
         Press break · analysis failed
       </p>
       <p className="mt-2 font-display text-[16px] text-foreground">{message}</p>
@@ -570,20 +608,20 @@ function StartInterviewButton({
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
         className={cn(
-          "group flex items-center gap-3 border bg-foreground px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.22em] text-background transition-colors",
+          "group flex items-center gap-3 rounded-md border bg-foreground px-5 py-2.5 font-mono text-[13px] uppercase tracking-[0.16em] text-background transition-colors",
           disabled
             ? "cursor-not-allowed opacity-40"
             : "border-foreground hover:bg-background hover:text-foreground",
         )}
       >
         Sit for the panel
-        <span className="font-display text-[15px] leading-none transition-transform group-hover:translate-x-0.5">
+        <span className="font-display text-[16px] leading-none transition-transform group-hover:translate-x-0.5">
           →
         </span>
       </button>
       {open && !disabled && (
         <div className="absolute right-0 top-full z-30 mt-2 w-80 border border-foreground bg-card p-5 shadow-[6px_6px_0_hsl(var(--foreground))]">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-proof">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-proof">
             Set the panel
           </p>
           <h4 className="mt-1 font-display text-[20px] leading-tight">
@@ -592,7 +630,7 @@ function StartInterviewButton({
 
           <div className="mt-5 space-y-4">
             <div>
-              <label className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <label className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                 Questions
               </label>
               <div className="mt-1.5 grid grid-cols-4 border border-border">
@@ -614,7 +652,7 @@ function StartInterviewButton({
               </div>
             </div>
             <div>
-              <label className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              <label className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                 Tone
               </label>
               <div className="mt-1.5 grid grid-cols-3 border border-border">
@@ -647,7 +685,7 @@ function StartInterviewButton({
                 setOpen(false);
                 onStart(count, difficulty);
               }}
-              className="mt-2 flex w-full items-center justify-center gap-2 bg-proof py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-background transition-opacity hover:opacity-90"
+              className="mt-2 flex w-full items-center justify-center gap-2 bg-proof py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-background transition-opacity hover:opacity-90"
             >
               Begin the interview
               <span className="font-display text-[14px] leading-none">→</span>
@@ -672,13 +710,13 @@ function InterviewLaunchOverlay({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/85 backdrop-blur-sm animate-fade-in">
       <div className="relative w-full max-w-md border-2 border-foreground bg-card shadow-[8px_8px_0_hsl(var(--foreground))] animate-scale-in">
-        <div className="border-b border-foreground bg-foreground px-6 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-background">
+        <div className="border-b border-foreground bg-foreground px-6 py-3 font-mono text-[11px] uppercase tracking-[0.16em] text-background">
           Panel · Convening
         </div>
         <div className="space-y-5 p-7">
           {error ? (
             <>
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-proof">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-proof">
                 Press break
               </p>
               <h3 className="font-display text-[24px] leading-snug">
@@ -690,14 +728,14 @@ function InterviewLaunchOverlay({
               <button
                 type="button"
                 onClick={onCancel}
-                className="w-full border border-foreground py-3 font-mono text-[11px] uppercase tracking-[0.22em] hover:bg-foreground hover:text-background"
+                className="w-full border border-foreground py-3 font-mono text-[11px] uppercase tracking-[0.16em] hover:bg-foreground hover:text-background"
               >
                 Close
               </button>
             </>
           ) : (
             <>
-              <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-proof">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-proof">
                 Drafting questions
               </p>
               <h3 className="font-display text-[26px] leading-snug">
@@ -705,7 +743,7 @@ function InterviewLaunchOverlay({
               </h3>
 
               <div>
-                <div className="mb-2 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                <div className="mb-2 flex items-baseline justify-between font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                   <span className="shimmer-text">
                     {progress.current === 0 ? "Studying résumé" : `Q${progress.current} drafted`}
                   </span>

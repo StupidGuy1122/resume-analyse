@@ -46,11 +46,11 @@ export default function LoginPage() {
       <section className="relative flex flex-col">
         <header className="flex items-center justify-between px-10 py-6">
           <div className="flex items-baseline gap-2">
-            <span className="font-display text-[22px] tracking-tight text-foreground">
+            <span className="font-display text-[34px] tracking-tight text-foreground">
               resume<span className="proof-mark">·</span>analyse
             </span>
           </div>
-          <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+          <span className="font-mono text-[15px] uppercase tracking-[0.16em] text-muted-foreground">
             Reception · Counter B
           </span>
         </header>
@@ -58,10 +58,10 @@ export default function LoginPage() {
         <div className="flex flex-1 items-center justify-center px-10 pb-16">
           <div className="w-full max-w-sm">
             {/* Eyebrow + headline */}
-            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-proof">
+            <p className="font-mono text-[13px] uppercase tracking-[0.16em] text-proof">
               Submission desk
             </p>
-            <h1 className="mt-3 font-display text-[44px] leading-[1.05] text-foreground">
+            <h1 className="mt-3 font-display font-display-swash text-[48px] leading-[1.05] text-foreground">
               Hand it over.
               <span className="block italic text-muted-foreground">
                 Then mind the red ink.
@@ -72,9 +72,9 @@ export default function LoginPage() {
               并把可能的面试问题一并预排。数据不离开这台机器。
             </p>
 
-            <div className="mt-10 hairline" />
+            <div className="mt-8 hairline" />
 
-            <form onSubmit={handleSubmit} className="mt-8 space-y-7">
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <Field
                 index="01"
                 label="Account"
@@ -89,7 +89,7 @@ export default function LoginPage() {
                     onChange={(e) => setUsername(e.target.value)}
                     disabled={submitting}
                     placeholder="admin"
-                    className="w-full bg-transparent py-2 font-display text-[20px] text-foreground outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
+                    className="w-full bg-transparent py-1.5 font-display text-[18px] text-foreground outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
                   />
                 }
               />
@@ -107,7 +107,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={submitting}
                     placeholder="••••••••"
-                    className="w-full bg-transparent py-2 font-display text-[20px] tracking-[0.2em] text-foreground outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
+                    className="w-full bg-transparent py-1.5 font-display text-[18px] tracking-[0.2em] text-foreground outline-none placeholder:text-muted-foreground/40 disabled:opacity-50"
                   />
                 }
               />
@@ -124,7 +124,7 @@ export default function LoginPage() {
                 className="group h-12 w-full justify-between rounded-sm bg-foreground px-5 text-background hover:bg-foreground/90"
                 disabled={submitting || !username || !password}
               >
-                <span className="font-mono text-[12px] uppercase tracking-[0.22em]">
+                <span className="font-mono text-[12px] uppercase tracking-[0.16em]">
                   {submitting ? "Signing in" : "Enter the proof room"}
                 </span>
                 {submitting ? (
@@ -143,7 +143,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <footer className="flex items-center justify-between border-t border-border px-10 py-5 font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+        <footer className="flex items-center justify-between px-10 py-5 font-mono text-[15px] uppercase tracking-[0.16em] text-muted-foreground">
           <span>Issue №01 · 2026</span>
           <span>Local Ollama · qwen2.5</span>
         </footer>
@@ -168,7 +168,7 @@ function Field({
       <div className="mb-1 flex items-baseline justify-between">
         <span className="flex items-baseline gap-3">
           <span className="font-mono text-[11px] tabular-nums text-proof">{index}</span>
-          <span className="font-mono text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
+          <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
             {label}
           </span>
         </span>

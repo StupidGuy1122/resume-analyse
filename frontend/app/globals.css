@@ -34,7 +34,7 @@
     --border: 38 16% 78%;
     --input: 38 16% 78%;
     --ring: 30 16% 9%;
-    --radius: 0.25rem;                   /* tight, printed feel */
+    --radius: 0.5rem;                    /* softened — printed feel without sharp corners */
 
     --proof: 4 60% 48%;                  /* #C8362B */
     --rule: 222 64% 33%;                 /* #1E3A8A */
@@ -100,14 +100,26 @@
    * ---------------------------------------------------------------------- */
   .font-display {
     font-family: var(--font-display, "Fraunces", "Source Serif Pro", Georgia, serif);
-    font-feature-settings: "ss01", "ss03", "swsh";
-    letter-spacing: -0.02em;
+    /* ss01 + cv11: subtler high-contrast cuts; lnum: lining figures sit
+       evenly on the baseline next to caps. Swash forms intentionally off
+       so body copy doesn't feel costumed. */
+    font-feature-settings: "ss01", "cv11", "lnum";
+    letter-spacing: -0.015em;
+  }
+  /* Optional swash class for hero / marquee uses only */
+  .font-display-swash {
+    font-feature-settings: "ss01", "cv11", "swsh", "lnum";
   }
   .font-body {
     font-family: var(--font-body, "Inter Tight", ui-sans-serif, system-ui), sans-serif;
+    /* cv11: single-storey a; ss01/ss02: nicer ampersand & tail forms */
+    font-feature-settings: "cv11", "ss01", "ss02", "tnum";
   }
   .font-mono {
     font-family: var(--font-mono, "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace);
+    /* zero=slashed, fixed-tabular, ligatures off — code/label clarity. */
+    font-feature-settings: "ss01", "tnum", "zero";
+    font-variant-ligatures: none;
   }
 
   /* Eyebrow caption — small uppercase mono with a leading rule */

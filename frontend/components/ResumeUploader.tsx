@@ -59,7 +59,7 @@ export default function ResumeUploader() {
           if (f) handleFile(f);
         }}
         className={cn(
-          "group relative block cursor-pointer border border-foreground/30 bg-card transition-colors",
+          "group relative block cursor-pointer overflow-hidden rounded-lg border border-foreground/30 bg-card transition-colors",
           "hover:border-foreground",
           dragging && "border-foreground bg-amber/10",
           uploading && "pointer-events-none",
@@ -77,38 +77,36 @@ export default function ResumeUploader() {
           disabled={uploading}
         />
 
-        {/* Top tape strip — looks like manuscript intake form */}
-        <div className="flex items-center justify-between border-b border-border bg-foreground px-6 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-background">
+        {/* Tape strip */}
+        <div className="flex items-center justify-between bg-foreground px-5 py-3 font-mono text-[13px] uppercase tracking-[0.16em] text-background">
           <span>Form INK-01 · Manuscript intake</span>
           <span className="opacity-70">PDF / DOCX / TXT / MD · ≤ 10MB</span>
         </div>
 
-        {/* Body */}
-        <div className="grid grid-cols-12 gap-0">
-          {/* Left rule column */}
-          <div className="col-span-1 border-r border-border bg-background/40 py-12">
-            <div className="flex h-full flex-col items-center justify-between gap-3 font-mono text-[10px] text-muted-foreground/60">
-              {Array.from({ length: 8 }).map((_, i) => (
+        {/* Body — pure drop area, dominant */}
+        <div className="grid grid-cols-12">
+          <div className="col-span-1 border-r border-border bg-background/40">
+            <div className="flex h-full flex-col items-center justify-around py-8 font-mono text-[9.5px] text-muted-foreground/60">
+              {Array.from({ length: 6 }).map((_, i) => (
                 <span key={i}>{String(i + 1).padStart(2, "0")}</span>
               ))}
             </div>
           </div>
 
-          {/* Drop area */}
-          <div className="col-span-11 flex flex-col items-start gap-7 px-12 py-14">
-            <div className="flex items-baseline gap-5">
-              <span className="font-display text-[64px] font-light leading-none text-proof">
+          <div className="col-span-11 flex flex-col items-start gap-5 px-8 py-10">
+            <div className="flex items-center gap-5">
+              <span className="font-display text-[44px] font-light leading-none text-proof">
                 {uploading ? (
-                  <Loader2 className="h-12 w-12 animate-spin text-proof" />
+                  <Loader2 className="h-9 w-9 animate-spin text-proof" />
                 ) : (
                   "↘"
                 )}
               </span>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                <p className="font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
                   Drop file here
                 </p>
-                <h3 className="mt-1 font-display text-[34px] leading-[1.05] text-foreground">
+                <h3 className="mt-1 font-display text-[30px] leading-[1.05] text-foreground">
                   {uploading
                     ? "Reading the page…"
                     : dragging
@@ -118,13 +116,12 @@ export default function ResumeUploader() {
               </div>
             </div>
 
-            <p className="max-w-[52ch] text-[14px] leading-relaxed text-muted-foreground">
-              简历将由本机 Ollama 上的 AI 编辑接管：解析结构 → 起草修改建议 → 拟定面试题。
-              整套流程不上传到云端。
+            <p className="max-w-[52ch] text-[13px] leading-relaxed text-muted-foreground">
+              简历由本机 Ollama 编辑接管：解析结构 → 起草修改建议 → 拟定面试题。整套流程不上传到云端。
             </p>
 
             {filename && (
-              <div className="flex items-center gap-3 border border-border bg-background px-4 py-2 font-mono text-[12px]">
+              <div className="flex items-center gap-2.5 rounded-md border border-border bg-background px-3 py-1.5 font-mono text-[11.5px]">
                 <span className="text-proof">▸</span>
                 <span className="truncate">{filename}</span>
               </div>
@@ -132,7 +129,7 @@ export default function ResumeUploader() {
 
             {uploading && (
               <div className="w-full max-w-md">
-                <div className="mb-1.5 flex justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                <div className="mb-1.5 flex justify-between font-mono text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground">
                   <span className="shimmer-text">Parsing</span>
                   <span>{Math.round(progress)}%</span>
                 </div>
@@ -149,10 +146,10 @@ export default function ResumeUploader() {
               <button
                 type="button"
                 onClick={() => inputRef.current?.click()}
-                className="group/btn flex items-center gap-3 border border-foreground bg-foreground px-6 py-3 font-mono text-[12px] uppercase tracking-[0.22em] text-background transition-colors hover:bg-background hover:text-foreground"
+                className="group/btn flex items-center gap-2.5 rounded-md border border-foreground bg-foreground px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.16em] text-background transition-colors hover:bg-background hover:text-foreground"
               >
                 Choose a file
-                <span className="font-display text-[16px] leading-none transition-transform group-hover/btn:translate-x-1">
+                <span className="font-display text-[14px] leading-none transition-transform group-hover/btn:translate-x-0.5">
                   →
                 </span>
               </button>
@@ -162,7 +159,7 @@ export default function ResumeUploader() {
       </label>
 
       {error && (
-        <p className="mt-4 animate-shake border-l-2 border-proof bg-proof/[0.06] px-4 py-2.5 text-sm text-proof">
+        <p className="mt-3 animate-shake rounded-md border-l-2 border-proof bg-proof/[0.06] px-4 py-2.5 text-sm text-proof">
           {error}
         </p>
       )}

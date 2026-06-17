@@ -16,7 +16,7 @@ export default function InterviewQuestionList({
 }) {
   if (items.length === 0) {
     return (
-      <p className="px-5 py-10 text-center font-mono text-[12px] uppercase tracking-[0.22em] text-muted-foreground">
+      <p className="px-5 py-10 text-center font-mono text-[12px] uppercase tracking-[0.16em] text-muted-foreground">
         No questions yet
       </p>
     );
@@ -37,7 +37,7 @@ export default function InterviewQuestionList({
         return (
           <section key={d}>
             <header className="flex items-baseline justify-between border-b border-foreground/40 px-5 py-3">
-              <span className={`border-l-2 pl-2 font-mono text-[10px] uppercase tracking-[0.22em] ${meta.tone}`}>
+              <span className={`border-l-2 pl-2 font-mono text-[10px] uppercase tracking-[0.16em] ${meta.tone}`}>
                 {meta.label}
               </span>
               <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
@@ -57,7 +57,7 @@ export default function InterviewQuestionList({
                     <p className="font-display text-[18px] leading-snug text-foreground">
                       {q.question}
                     </p>
-                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                    <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                       {q.related_section}
                     </p>
                     {q.hint && (

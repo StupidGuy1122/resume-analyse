@@ -48,13 +48,13 @@ export default function SuggestionCard({
         <div className="flex flex-wrap items-center gap-3">
           <span
             className={cn(
-              "border-l-2 pl-2 font-mono text-[10px] uppercase tracking-[0.22em]",
+              "border-l-2 pl-2 font-mono text-[10px] uppercase tracking-[0.16em]",
               meta.tone,
             )}
           >
             {meta.text}
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+          <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
             {item.section}
           </span>
         </div>
