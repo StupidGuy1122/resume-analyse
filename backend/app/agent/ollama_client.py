@@ -6,6 +6,7 @@ making it easy to mock in tests or swap providers later.
 from __future__ import annotations
 
 import json
+from collections.abc import AsyncIterator
 from typing import Any
 
 from ollama import AsyncClient
@@ -49,6 +50,39 @@ class OllamaClient:
             return json.loads(content)
         except json.JSONDecodeError as exc:
             raise ValueError(f"Model did not return valid JSON: {content[:300]}...") from exc
+
+    async def chat_json_stream(
+        self,
+        system: str,
+        user: str,
+        *,
+        temperature: float = 0.2,
+    ) -> AsyncIterator[str]:
+        """Stream the model's JSON output as a sequence of text chunks.
+
+        Yields the *cumulative* JSON string after each chunk arrives — callers
+        can attempt incremental parsing on every yield to detect newly-completed
+        items (see ``pipeline._stream_items`` for the consumer side).
+
+        We yield the cumulative buffer (not just deltas) so callers don't have
+        to maintain their own state.
+        """
+        stream = await self._client.chat(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            format="json",
+            options={"temperature": temperature},
+            stream=True,
+        )
+        buf: list[str] = []
+        async for part in stream:
+            chunk = part.get("message", {}).get("content", "")
+            if chunk:
+                buf.append(chunk)
+                yield "".join(buf)
 
 
 # Lazy singleton — instantiated on first use to avoid event-loop issues at import time.

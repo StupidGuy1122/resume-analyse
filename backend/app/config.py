@@ -18,6 +18,16 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000"
     max_upload_mb: int = 10
 
+    # Persistence — single SQLite file (created on first run)
+    db_path: str = "data/app.db"
+
+    # Auth — single fixed account configured via env. No registration UI.
+    auth_username: str = "admin"
+    auth_password: str = "admin"
+    # 32+ random chars; used for HMAC-signing session cookies.
+    auth_secret: str = "change-me-to-a-long-random-string-please"
+    auth_session_days: int = 30
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

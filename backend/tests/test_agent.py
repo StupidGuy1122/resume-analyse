@@ -52,6 +52,7 @@ async def test_analyze_suggestions_filters_invalid_items():
                 "items": [
                     {
                         "section": "summary",
+                        # `original` must appear in raw_text for grounding to keep it.
                         "original": "Did stuff",
                         "suggestion": "Led 4-person team to ship X",
                         "reason": "Quantify impact",
@@ -63,10 +64,44 @@ async def test_analyze_suggestions_filters_invalid_items():
         ]
     )
     structured = StructuredResume(name="Jane")
-    res = await pipeline.analyze_suggestions("rid-1", "raw text", structured, client=fake)  # type: ignore[arg-type]
+    raw_text = "Jane Doe — Engineer. Did stuff. Worked on things."
+    res = await pipeline.analyze_suggestions("rid-1", raw_text, structured, client=fake)  # type: ignore[arg-type]
     assert res.resume_id == "rid-1"
     assert len(res.items) == 1
     assert res.items[0].priority == "high"
+
+
+@pytest.mark.asyncio
+async def test_analyze_suggestions_drops_hallucinated_originals():
+    """Items whose `original` is NOT in the resume should be filtered."""
+    fake = FakeOllama(
+        [
+            {
+                "items": [
+                    {
+                        "section": "work_experience",
+                        # ↓ this sentence is NOT in raw_text — must be dropped.
+                        "original": "led a team of 50 across three continents",
+                        "suggestion": "...",
+                        "reason": "...",
+                        "priority": "high",
+                    },
+                    {
+                        "section": "work_experience",
+                        "original": "Built a thing",  # is in raw_text
+                        "suggestion": "Built a scalable thing serving 10k QPS",
+                        "reason": "Quantification",
+                        "priority": "high",
+                    },
+                ]
+            }
+        ]
+    )
+    structured = StructuredResume()
+    raw_text = "Engineer. Built a thing. Shipped on time."
+    res = await pipeline.analyze_suggestions("rid", raw_text, structured, client=fake)  # type: ignore[arg-type]
+    assert len(res.items) == 1
+    assert "Built a thing" in res.items[0].original
 
 
 @pytest.mark.asyncio
@@ -84,7 +119,9 @@ async def test_analyze_interview_questions_handles_bare_list():
         ]
     )
     structured = StructuredResume(name="Jane")
-    res = await pipeline.analyze_interview_questions("rid-2", structured, client=fake)  # type: ignore[arg-type]
+    res = await pipeline.analyze_interview_questions(
+        "rid-2", "Jane worked at Acme.", structured, client=fake
+    )  # type: ignore[arg-type]
     assert len(res.items) == 1
     assert res.items[0].difficulty == "medium"
 

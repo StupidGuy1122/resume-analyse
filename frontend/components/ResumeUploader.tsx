@@ -2,10 +2,8 @@
 
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, UploadCloud, FileText } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { uploadResume } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -27,7 +25,6 @@ export default function ResumeUploader() {
       setUploading(true);
       setProgress(20);
 
-      // Smooth fake progress while waiting on the server — small files upload instantly.
       const tick = setInterval(() => {
         setProgress((p) => (p < 85 ? p + 5 : p));
       }, 120);
@@ -36,7 +33,6 @@ export default function ResumeUploader() {
         const res = await uploadResume(file);
         clearInterval(tick);
         setProgress(100);
-        // Small delay so the user perceives the success state before navigation.
         setTimeout(() => router.push(`/analyze/${res.resume_id}`), 250);
       } catch (e) {
         clearInterval(tick);
@@ -49,7 +45,7 @@ export default function ResumeUploader() {
   );
 
   return (
-    <div className="w-full max-w-2xl">
+    <div className="w-full">
       <label
         onDragOver={(e) => {
           e.preventDefault();
@@ -63,10 +59,10 @@ export default function ResumeUploader() {
           if (f) handleFile(f);
         }}
         className={cn(
-          "group relative flex flex-col items-center justify-center gap-4 rounded-2xl border-2 border-dashed bg-card/60 p-12 text-center transition-all backdrop-blur",
-          "hover:border-primary hover:bg-accent/50",
-          dragging && "border-primary bg-accent/70 scale-[1.01]",
-          uploading && "pointer-events-none opacity-75",
+          "group relative block cursor-pointer border border-foreground/30 bg-card transition-colors",
+          "hover:border-foreground",
+          dragging && "border-foreground bg-amber/10",
+          uploading && "pointer-events-none",
         )}
       >
         <input
@@ -81,41 +77,92 @@ export default function ResumeUploader() {
           disabled={uploading}
         />
 
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-          {uploading ? <Loader2 className="h-8 w-8 animate-spin" /> : <UploadCloud className="h-8 w-8" />}
+        {/* Top tape strip — looks like manuscript intake form */}
+        <div className="flex items-center justify-between border-b border-border bg-foreground px-6 py-3 font-mono text-[11px] uppercase tracking-[0.22em] text-background">
+          <span>Form INK-01 · Manuscript intake</span>
+          <span className="opacity-70">PDF / DOCX / TXT / MD · ≤ 10MB</span>
         </div>
 
-        <div>
-          <p className="text-lg font-semibold">
-            {uploading ? "正在解析…" : "拖拽简历到此处，或点击选择文件"}
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            支持 PDF、DOCX、TXT、MD · 最大 10 MB · 数据不会离开你的机器
-          </p>
+        {/* Body */}
+        <div className="grid grid-cols-12 gap-0">
+          {/* Left rule column */}
+          <div className="col-span-1 border-r border-border bg-background/40 py-12">
+            <div className="flex h-full flex-col items-center justify-between gap-3 font-mono text-[10px] text-muted-foreground/60">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <span key={i}>{String(i + 1).padStart(2, "0")}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Drop area */}
+          <div className="col-span-11 flex flex-col items-start gap-7 px-12 py-14">
+            <div className="flex items-baseline gap-5">
+              <span className="font-display text-[64px] font-light leading-none text-proof">
+                {uploading ? (
+                  <Loader2 className="h-12 w-12 animate-spin text-proof" />
+                ) : (
+                  "↘"
+                )}
+              </span>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                  Drop file here
+                </p>
+                <h3 className="mt-1 font-display text-[34px] leading-[1.05] text-foreground">
+                  {uploading
+                    ? "Reading the page…"
+                    : dragging
+                      ? "Yes — let go."
+                      : "Lay your manuscript on the desk."}
+                </h3>
+              </div>
+            </div>
+
+            <p className="max-w-[52ch] text-[14px] leading-relaxed text-muted-foreground">
+              简历将由本机 Ollama 上的 AI 编辑接管：解析结构 → 起草修改建议 → 拟定面试题。
+              整套流程不上传到云端。
+            </p>
+
+            {filename && (
+              <div className="flex items-center gap-3 border border-border bg-background px-4 py-2 font-mono text-[12px]">
+                <span className="text-proof">▸</span>
+                <span className="truncate">{filename}</span>
+              </div>
+            )}
+
+            {uploading && (
+              <div className="w-full max-w-md">
+                <div className="mb-1.5 flex justify-between font-mono text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+                  <span className="shimmer-text">Parsing</span>
+                  <span>{Math.round(progress)}%</span>
+                </div>
+                <div className="h-[2px] w-full bg-border">
+                  <div
+                    className="h-full bg-proof transition-[width] duration-200"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {!uploading && (
+              <button
+                type="button"
+                onClick={() => inputRef.current?.click()}
+                className="group/btn flex items-center gap-3 border border-foreground bg-foreground px-6 py-3 font-mono text-[12px] uppercase tracking-[0.22em] text-background transition-colors hover:bg-background hover:text-foreground"
+              >
+                Choose a file
+                <span className="font-display text-[16px] leading-none transition-transform group-hover/btn:translate-x-1">
+                  →
+                </span>
+              </button>
+            )}
+          </div>
         </div>
-
-        {filename && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <FileText className="h-4 w-4" />
-            <span className="max-w-xs truncate">{filename}</span>
-          </div>
-        )}
-
-        {uploading && (
-          <div className="w-full max-w-md">
-            <Progress value={progress} />
-          </div>
-        )}
-
-        {!uploading && (
-          <Button type="button" onClick={() => inputRef.current?.click()} className="mt-2">
-            选择简历文件
-          </Button>
-        )}
       </label>
 
       {error && (
-        <p className="mt-4 rounded-md bg-destructive/10 px-4 py-2 text-sm text-destructive">
+        <p className="mt-4 animate-shake border-l-2 border-proof bg-proof/[0.06] px-4 py-2.5 text-sm text-proof">
           {error}
         </p>
       )}

@@ -1,6 +1,6 @@
 # resume-analyse
 
-> 智能简历分析网页 — 上传简历后，由本地大模型给出**改进建议**和**面试题预测**。数据全程不离开你的机器。
+> 智能简历分析 + 模拟面试网页 — 上传简历后，由本地大模型给出**改进建议**、**面试题预测**，并支持**多轮模拟面试 + 评估报告**。数据全程不离开你的机器。
 
 ```
 ┌───────────────────────────────┐    ┌───────────────────────┐    ┌────────────────────┐
@@ -11,29 +11,200 @@
 
 ## 功能特性
 
+### 简历分析
 - **拖拽上传**：PDF / DOCX / TXT / MD，自动解析为纯文本
 - **结构化抽取**：先把简历变成 JSON（教育 / 工作 / 项目 / 技能）
 - **改进建议**：按优先级输出原文 → 建议 → 改写理由
 - **面试题预测**：按难度（简单 / 中等 / 困难）分组，附答题提示
-- **流式渲染**：后端用 NDJSON 逐阶段推送，前端边出边渲染
+- **流式渲染**：后端用 NDJSON 逐条推送，前端边出边渲染
+- **抗幻觉**：token-Jaccard grounding 校验 + 强约束提示词，丢弃简历中找不到原文的建议
+
+### 模拟面试 Agent
+- **简历驱动出题**：基于简历真实内容生成 3-10 道主问题，每题预绑定 2 道追问
+- **逐题流式评分**：提交答案后立即开始评估，分数动画 + 反馈 + 参考答案
+- **综合评估报告**：综评分数、分类得分、优势 / 改进 双栏建议
+- **会话状态机**：`generating → ready → in_progress → completed → evaluated`，刷新页面可恢复
 - **隐私优先**：通过 Ollama 调用本地模型，简历不出本机
+
+## 致谢与参考
+
+模拟面试 Agent 的设计借鉴了 [Snailclimb/interview-guide](https://github.com/Snailclimb/interview-guide)（Java + Spring Boot 实现）。我们参考了它的几条核心思路并适配到 Python + 本地 7B 模型：
+
+- **题目预生成 + 追问预绑定**：一次性出题，每题挂 2 道追问，避免边答边生成的卡顿
+- **`topic_summary` 历史去重**：每题带 ≤10 字摘要，重出时回灌防止重复
+- **逐题打分 + 二次汇总评估**：把"评单题"和"看全局"拆开，避免长上下文让小模型失忆
+- **「不知道 / 跳过 / 不会」必须 0 分**：防止 7B 模型给放弃作答打人情分
+- **"严禁编造简历中不存在的项目"**：硬约束写进 system prompt
+
+不同点：interview-guide 是企业级方案（Spring Boot + PostgreSQL + Redis + 语音 ASR/TTS）；本项目是单机 MVP（FastAPI + 进程内存 + 纯文本），定位不同。
+
+---
 
 ## 目录结构
 
 ```
 resume-analyse/
-├── backend/            # FastAPI 后端 + Agent
+├── backend/                    # FastAPI 后端 + Agent
 │   ├── app/
-│   │   ├── api/        # health / resume / analysis 路由
-│   │   ├── agent/      # ollama_client, prompts, pipeline
-│   │   ├── services/   # parser, storage
-│   │   └── schemas/    # Pydantic 模型
-│   └── tests/
-├── frontend/           # Next.js 14 (App Router) 前端
-│   ├── app/            # / 和 /analyze/[id]
-│   ├── components/     # ui/* + 业务组件
-│   └── lib/            # API 客户端
-└── docker-compose.yml  # 一键拉起 ollama + backend + frontend
+│   │   ├── api/
+│   │   │   ├── health.py
+│   │   │   ├── resume.py
+│   │   │   ├── analysis.py            # 简历分析（含 NDJSON 流式 /full）
+│   │   │   └── interview_session.py   # 模拟面试（5 个端点，3 个流式）
+│   │   ├── agent/
+│   │   │   ├── ollama_client.py       # AsyncClient 封装 + 流式
+│   │   │   ├── pipeline.py            # 简历分析两步流水线 + 流式 JSON 解析器
+│   │   │   ├── prompts.py             # 简历分析提示词
+│   │   │   ├── interview_agent.py     # 面试 agent：出题 / 评分 / 出报告
+│   │   │   ├── interview_prompts.py   # 面试 agent 提示词
+│   │   │   └── schemas.py
+│   │   ├── services/
+│   │   │   ├── parser.py              # PDF / DOCX / TXT / MD 解析
+│   │   │   ├── grounding.py           # token-Jaccard 抗幻觉校验
+│   │   │   └── storage.py             # 进程内 store（resume + analysis + session）
+│   │   └── schemas/
+│   │       ├── resume.py
+│   │       ├── analysis.py
+│   │       └── interview_session.py
+│   └── tests/                          # 25 个单元测试，全过
+├── frontend/                   # Next.js 14 (App Router) 前端
+│   ├── app/
+│   │   ├── page.tsx                    # 上传页
+│   │   ├── analyze/[id]/page.tsx       # 简历分析结果页
+│   │   └── interview/[sessionId]/page.tsx  # 模拟面试页
+│   ├── components/
+│   │   ├── ui/*                        # shadcn/ui 基础组件
+│   │   ├── ResumeUploader.tsx
+│   │   ├── SuggestionCard.tsx
+│   │   ├── InterviewQuestionList.tsx
+│   │   ├── AnalysisSkeleton.tsx
+│   │   ├── QuestionSidebar.tsx         # 面试侧边题目列表
+│   │   ├── AnswerFeedback.tsx          # 答题反馈（动画分数 + 折叠参考答案）
+│   │   └── InterviewReport.tsx         # 面试综合报告
+│   └── lib/api.ts                      # 类型化 API 封装 + NDJSON 流式 helper
+├── start.sh / stop.sh          # Git Bash 一键启停脚本
+└── docker-compose.yml          # 一键拉起 ollama + backend + frontend
+```
+
+---
+
+## 整体架构
+
+### 数据流
+
+```
+用户上传简历 ─▶ /api/resume/upload ─▶ ParsedResume 存入 store
+                                                │
+                                                ▼
+              ┌────────────────────────────────────────────────────────┐
+              │                   两条独立的 Agent 链路                 │
+              ├──────────────────────────┬─────────────────────────────┤
+              │  ① 简历分析             │  ② 模拟面试                 │
+              │                          │                             │
+              │  POST /api/analysis/.../ │  POST /api/interview-       │
+              │       full (NDJSON 流式)│       session/start         │
+              │                          │                             │
+              │  extract → suggestions   │  generate questions         │
+              │  → interview questions   │       │                     │
+              │  逐条 yield 给前端        │       ▼                     │
+              │                          │  POST .../{sid}/answer ────┐│
+              │                          │  evaluate (per question)   ││
+              │                          │       │                    ││
+              │                          │       ▼  循环作答          ││
+              │                          │  POST .../{sid}/finish ────┘│
+              │                          │  generate report (流式)     │
+              └──────────────────────────┴─────────────────────────────┘
+```
+
+### Agent 设计要点
+
+**1. 流式 NDJSON 是产品体验的关键**
+
+后端用 Ollama 的 `stream=True`，前端用 `getReader()` + `TextDecoder` 按 `\n` 切割，**每完成一个 JSON 对象就立即推送**。用户体感：
+- 上传后 5-10 秒看到第一题（其余题目用户读题时已在后台生成）
+- 提交答案后立即看到"评估中…"shimmer，约 5-15 秒分数动画弹出
+- 报告页综评先到 → 优势/改进逐条蹦 → 类别得分 progress bar 渐进填满
+
+**2. 抗幻觉三件套（路径里的 A/C/E）**
+
+- **A**：原文窗口扩到全文（不再截断 1500 字），第二步 LLM 直接看完整简历
+- **C**：`services/grounding.py` 做 token-Jaccard 校验，丢弃简历中找不到原文的建议
+- **E**：提示词加 GOOD/BAD few-shot 示例，"宁缺毋滥"代替"必出 5-10 条"
+
+**3. 状态机与持久化**
+
+会话状态全部保存在进程内 `_Store` 单例里（线程安全的 RLock 字典）。MVP 阶段重启即丢——这是已知行为，PostgreSQL 在路线图里。
+
+---
+
+## API 速览
+
+### 简历相关
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET  | `/health` | 进程健康 |
+| GET  | `/health/ollama` | Ollama 可达性与模型清单 |
+| POST | `/api/resume/upload` | `multipart/form-data` 上传简历，返回 `resume_id` |
+| GET  | `/api/resume/{id}` | 取回解析后的纯文本 |
+| POST | `/api/analysis/{id}/suggestions` | 同步返回改进建议 |
+| POST | `/api/analysis/{id}/interview-questions` | 同步返回面试题 |
+| POST | `/api/analysis/{id}/full` | NDJSON 流式返回全部分析事件 |
+
+### 模拟面试相关
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| POST   | `/api/interview-session/start` | **流式**：创建会话 + 逐条推送预生成的题目 |
+| GET    | `/api/interview-session/{sid}` | 取完整会话状态（页面刷新恢复用） |
+| POST   | `/api/interview-session/{sid}/answer` | **流式**：评估单题 + 推送下一题 |
+| POST   | `/api/interview-session/{sid}/finish` | **流式**：生成综合报告（综评 / 优势 / 改进 / 分类得分） |
+| DELETE | `/api/interview-session/{sid}` | 删除会话 |
+
+完整 Swagger UI：<http://localhost:8000/docs>
+
+#### NDJSON 事件协议
+
+`/api/analysis/{id}/full`：
+
+```
+{"stage": "extract:start"}
+{"stage": "extract:done"}
+{"stage": "suggestions:start"}
+{"stage": "suggestion:item",   "data": SuggestionItem}    ← 重复
+{"stage": "suggestions:done",  "data": SuggestionsResult}
+{"stage": "interview:start"}
+{"stage": "interview:item",    "data": InterviewQuestion} ← 重复
+{"stage": "interview:done",    "data": InterviewQuestionsResult}
+{"stage": "all:done"}
+{"stage": "error", "message": "..."}                       ← 任何阶段出错
+```
+
+`/api/interview-session/start`：
+
+```
+{"event": "session:created",  "data": InterviewSession}     ← 立即可跳转
+{"event": "question:item",    "data": InterviewQuestion}    ← 重复
+{"event": "questions:done",   "data": InterviewSession}
+```
+
+`/api/interview-session/{sid}/answer`：
+
+```
+{"event": "eval:start"}
+{"event": "eval:done",        "data": Answer}
+{"event": "next:question",    "data": InterviewQuestion | null}
+{"event": "session:complete"}                                ← 全部答完时
+```
+
+`/api/interview-session/{sid}/finish`：
+
+```
+{"event": "report:overall",      "data": {"overall_score", "overall_feedback"}}
+{"event": "report:strength",     "data": "<one strength>"}     ← 重复
+{"event": "report:improvement",  "data": "<one improvement>"}  ← 重复
+{"event": "report:category",     "data": CategoryScore}        ← 重复
+{"event": "report:done",         "data": InterviewReport}
 ```
 
 ---
@@ -109,7 +280,7 @@ python -m venv .venv
 .venv\Scripts\python.exe -m pip install --upgrade pip
 .venv\Scripts\python.exe -m pip install -e ".[dev]"
 
-# 跑一下测试，确认环境完好（应输出 9 passed）
+# 跑一下测试，确认环境完好（应输出 25 passed）
 .venv\Scripts\python.exe -m pytest -q
 
 # 启动开发服务器
@@ -152,7 +323,11 @@ pnpm dev
 
 ### 6. 验证全链路
 
-打开浏览器访问 **http://localhost:3000**，拖一份简历上去——上传成功后会跳到 `/analyze/{id}`，看着流式分析结果一段段冒出来。
+打开浏览器访问 **http://localhost:3000**，拖一份简历上去：
+
+1. 跳到 `/analyze/{id}` 页面，看着流式分析一段段冒出来
+2. 分析完成后，点击右上角 **"开始模拟面试"** → 选择题数和难度 → 进入面试
+3. 答题 → 看分数动画 + 反馈 → 下一题 → 全部答完后生成综合报告
 
 如果想确认 GPU 真的被用上了，发起分析后另开终端：
 
@@ -167,20 +342,21 @@ nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv
 
 ### 推荐：一键脚本（在 Git Bash 里跑）
 
-项目根目录有个 `start.sh`，**用 Git Bash 打开它所在目录，运行：**
+项目根目录有 `start.sh` 和 `stop.sh`，**用 Git Bash 打开它所在目录**：
 
 ```bash
-./start.sh
+./start.sh    # 启动
+./stop.sh     # 强制停止（仅在 Ctrl+C 没清干净时用）
 ```
 
-它会：
-1. 强制 kill 掉 8000 / 3000 端口上的旧进程（解决 Next.js 漂到 3001 那个坑）
+`start.sh` 做了哪些事：
+1. 强制 kill 8000 / 3000 端口上的旧进程（解决 Next.js 漂到 3001 那个坑）
 2. 检查 Ollama 是否在跑
 3. 后台启动后端，等 `/health` 返回 200 才继续
 4. 前台启动前端，**日志直接打在你这个终端里**
 5. 浏览器自动打开 http://localhost:3000
 
-**停止：直接 `Ctrl+C`** —— 前端立即停，脚本的 EXIT trap 会顺手把后端也清掉。如果哪次清不彻底（端口还被占着），跑一下 `./stop.sh` 强制清理。
+**停止：直接 `Ctrl+C`** —— 前端立即停，脚本的 EXIT trap 会顺手把后端也清掉。
 
 后端日志写在 `.logs/backend.log`，分析失败时去这里看堆栈。
 
@@ -241,26 +417,21 @@ docker exec -it resume-analyse-ollama ollama pull qwen2.5:7b
 
 ---
 
-## API 速览
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| GET  | `/health` | 进程健康 |
-| GET  | `/health/ollama` | Ollama 可达性与模型清单 |
-| POST | `/api/resume/upload` | `multipart/form-data` 上传简历，返回 `resume_id` |
-| GET  | `/api/resume/{id}` | 取回解析后的纯文本 |
-| POST | `/api/analysis/{id}/suggestions` | 同步返回改进建议 |
-| POST | `/api/analysis/{id}/interview-questions` | 同步返回面试题 |
-| POST | `/api/analysis/{id}/full` | NDJSON 流式返回全部分析事件 |
-
-完整 Swagger UI：<http://localhost:8000/docs>
-
 ## 测试
 
 ```powershell
 cd backend
-.venv\Scripts\python.exe -m pytest -q   # 9 个测试，全部用 mock Ollama，无需真实模型
+.venv\Scripts\python.exe -m pytest -q   # 25 个测试，全部用 mock Ollama，无需真实模型
 ```
+
+测试覆盖范围：
+- `test_agent.py` — 简历分析两步流水线
+- `test_grounding.py` — token-Jaccard 抗幻觉
+- `test_parser.py` — PDF / DOCX / TXT 解析
+- `test_streaming.py` — 流式 JSON 增量解析器
+- `test_interview_agent.py` — 面试 agent 三阶段（出题 / 评分 / 报告）
+
+---
 
 ## 配置项
 
@@ -314,6 +485,7 @@ cd backend
 **`uvicorn` 启动报"端口被占用"**
 
 - 上次的进程没退干净。Windows 下：`netstat -ano | findstr :8000` 找到 PID，然后 `taskkill /PID <pid> /F`
+- 或者直接用 `./stop.sh`
 
 ### 前端相关
 
@@ -326,11 +498,16 @@ cd backend
 - 浏览器开 DevTools → Network，看 `/api/analysis/.../full` 这个请求的 NDJSON 流是否在持续返回事件
 - 如果 `error` 事件携带 "Agent failure"，去后端终端看完整堆栈
 
+**面试页报 "Session not found"**
+
+- 服务重启过 → 内存里的 session 丢了。回到分析页重新点"开始模拟面试"即可
+- 这是 MVP 已知行为，路线图里 PostgreSQL 是替换目标
+
 ### 数据持久化
 
 **重启服务后简历找不到了**
 
-- 这是已知行为：MVP 版本所有数据都在进程内存里（见 `backend/app/services/storage.py`），重启即丢
+- 这是已知行为：MVP 版本所有数据（简历、分析缓存、面试会话）都在进程内存里（见 `backend/app/services/storage.py`），重启即丢
 - 路线图里 PostgreSQL 是替换目标，需要持久化时再做
 
 ---
@@ -340,8 +517,9 @@ cd backend
 - 用户系统、登录鉴权
 - 数据持久化（PostgreSQL + 历史记录）
 - JD 输入 → 岗位匹配度评分
+- 面试 agent 加 critic 二次校验，根治"在真实句子里塞数字"这种精细幻觉
 - 多语言简历自动识别
-- 导出分析报告 PDF
+- 导出分析 / 面试报告 PDF
 
 ## 许可
 

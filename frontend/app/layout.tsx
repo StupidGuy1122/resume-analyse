@@ -1,9 +1,31 @@
 import type { Metadata } from "next";
+import { Fraunces, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth-context";
+import { TopBar } from "@/components/TopBar";
+
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+  axes: ["opsz", "SOFT"],
+});
+
+const interTight = Inter_Tight({
+  subsets: ["latin"],
+  variable: "--font-body",
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "resume-analyse — 智能简历分析",
-  description: "上传你的简历，本地大模型秒级输出改进建议与面试题预测。",
+  title: "resume-analyse — 简历校样所",
+  description: "上传简历，AI 编辑会用红蓝铅笔逐句校对，并预排面试问答。",
 };
 
 export default function RootLayout({
@@ -12,9 +34,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="zh-CN">
-      <body className="min-h-dvh bg-gradient-to-b from-violet-50 via-background to-background">
-        {children}
+    <html
+      lang="zh-CN"
+      className={`${fraunces.variable} ${interTight.variable} ${jetbrainsMono.variable}`}
+    >
+      <body className="min-h-dvh bg-background text-foreground antialiased font-body">
+        <AuthProvider>
+          <TopBar />
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

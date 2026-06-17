@@ -11,8 +11,15 @@ from app.agent.pipeline import (
     analyze_interview_questions,
     analyze_suggestions,
     extract_structured,
+    stream_interview_questions,
+    stream_suggestions,
 )
-from app.schemas.analysis import InterviewQuestionsResult, SuggestionsResult
+from app.schemas.analysis import (
+    InterviewQuestion,
+    InterviewQuestionsResult,
+    SuggestionItem,
+    SuggestionsResult,
+)
 from app.services.storage import store
 
 logger = logging.getLogger(__name__)
@@ -55,7 +62,7 @@ async def interview_questions(resume_id: str) -> InterviewQuestionsResult:
 
     try:
         structured = await extract_structured(parsed.raw_text)
-        result = await analyze_interview_questions(resume_id, structured)
+        result = await analyze_interview_questions(resume_id, parsed.raw_text, structured)
     except Exception as exc:  # noqa: BLE001
         logger.exception("interview-questions pipeline failed")
         raise HTTPException(status.HTTP_502_BAD_GATEWAY, f"Agent failure: {exc}") from exc
@@ -66,14 +73,20 @@ async def interview_questions(resume_id: str) -> InterviewQuestionsResult:
 
 @router.post("/{resume_id}/full")
 async def full_analysis_stream(resume_id: str) -> StreamingResponse:
-    """Streaming endpoint — sends NDJSON events as each stage completes.
+    """Streaming endpoint — sends NDJSON events as the analysis progresses.
 
-    Event sequence:
+    Event sequence (each line is one JSON object):
       {"stage": "extract:start"}
       {"stage": "extract:done"}
+      {"stage": "suggestions:start"}
+      {"stage": "suggestion:item", "data": SuggestionItem}   ← repeated, one per item
       {"stage": "suggestions:done", "data": SuggestionsResult}
+      {"stage": "interview:start"}
+      {"stage": "interview:item",   "data": InterviewQuestion} ← repeated
       {"stage": "interview:done",   "data": InterviewQuestionsResult}
       {"stage": "all:done"}
+
+    On error: {"stage": "error", "message": "..."} mid-stream.
     """
     parsed = _require_resume(resume_id)
 
@@ -86,13 +99,25 @@ async def full_analysis_stream(resume_id: str) -> StreamingResponse:
             structured = await extract_structured(parsed.raw_text)
             yield event({"stage": "extract:done"})
 
-            sug = await analyze_suggestions(resume_id, parsed.raw_text, structured)
-            store.put_analysis(resume_id, "suggestions", sug)
-            yield event({"stage": "suggestions:done", "data": sug.model_dump()})
+            # ---- Suggestions: stream items as they arrive ----
+            yield event({"stage": "suggestions:start"})
+            sug_items: list[SuggestionItem] = []
+            async for item in stream_suggestions(parsed.raw_text, structured):
+                sug_items.append(item)
+                yield event({"stage": "suggestion:item", "data": item.model_dump()})
+            sug_result = SuggestionsResult(resume_id=resume_id, items=sug_items)
+            store.put_analysis(resume_id, "suggestions", sug_result)
+            yield event({"stage": "suggestions:done", "data": sug_result.model_dump()})
 
-            iq = await analyze_interview_questions(resume_id, structured)
-            store.put_analysis(resume_id, "interview", iq)
-            yield event({"stage": "interview:done", "data": iq.model_dump()})
+            # ---- Interview questions: stream items as they arrive ----
+            yield event({"stage": "interview:start"})
+            iq_items: list[InterviewQuestion] = []
+            async for item in stream_interview_questions(parsed.raw_text, structured):
+                iq_items.append(item)
+                yield event({"stage": "interview:item", "data": item.model_dump()})
+            iq_result = InterviewQuestionsResult(resume_id=resume_id, items=iq_items)
+            store.put_analysis(resume_id, "interview", iq_result)
+            yield event({"stage": "interview:done", "data": iq_result.model_dump()})
 
             yield event({"stage": "all:done"})
         except Exception as exc:  # noqa: BLE001

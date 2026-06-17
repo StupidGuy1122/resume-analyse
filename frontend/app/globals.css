@@ -2,46 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Editorial / proof-reading design system.
+ * Colors are intentionally pinned to a paper+ink palette — no purple gradients.
+ *   --paper:   #F5F2E9   warm cream stock
+ *   --ink:     #1A1612   deep, slightly warm black
+ *   --proof:   #C8362B   classic editor's red
+ *   --rule:    #1E3A8A   blue pencil for structural rules
+ *   --amber:   #C58A2E   highlighter
+ *   --rule-light: #D9D2BF margin guide
+ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --primary: 262 83% 58%;             /* violet-600 */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 262 83% 96%;
-    --accent-foreground: 262 83% 28%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 262 83% 58%;
-    --radius: 0.75rem;
+    --background: 42 32% 94%;            /* paper #F5F2E9 */
+    --foreground: 30 16% 9%;              /* ink #1A1612 */
+    --card: 42 38% 97%;                  /* slightly brighter paper */
+    --card-foreground: 30 16% 9%;
+    --popover: 42 38% 97%;
+    --popover-foreground: 30 16% 9%;
+    --primary: 30 16% 9%;                /* ink as primary — buttons read like printed type */
+    --primary-foreground: 42 32% 94%;
+    --secondary: 40 18% 86%;
+    --secondary-foreground: 30 16% 9%;
+    --muted: 40 18% 88%;
+    --muted-foreground: 30 12% 32%;
+    --accent: 4 60% 48%;                 /* proof red as accent */
+    --accent-foreground: 42 32% 94%;
+    --destructive: 4 60% 48%;
+    --destructive-foreground: 42 32% 94%;
+    --border: 38 16% 78%;
+    --input: 38 16% 78%;
+    --ring: 30 16% 9%;
+    --radius: 0.25rem;                   /* tight, printed feel */
+
+    --proof: 4 60% 48%;                  /* #C8362B */
+    --rule: 222 64% 33%;                 /* #1E3A8A */
+    --amber: 36 60% 47%;                 /* #C58A2E */
+    --rule-light: 42 24% 80%;            /* #D9D2BF */
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 5%;
-    --card-foreground: 0 0% 98%;
-    --primary: 262 83% 65%;
-    --primary-foreground: 240 10% 3.9%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 262 50% 18%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 262 83% 65%;
+    --background: 30 14% 7%;
+    --foreground: 42 30% 92%;
+    --card: 30 14% 9%;
+    --card-foreground: 42 30% 92%;
+    --popover: 30 14% 9%;
+    --popover-foreground: 42 30% 92%;
+    --primary: 42 30% 92%;
+    --primary-foreground: 30 14% 7%;
+    --secondary: 30 10% 16%;
+    --secondary-foreground: 42 30% 92%;
+    --muted: 30 10% 16%;
+    --muted-foreground: 42 12% 62%;
+    --accent: 4 70% 58%;
+    --accent-foreground: 42 30% 92%;
+    --destructive: 4 70% 58%;
+    --destructive-foreground: 42 30% 92%;
+    --border: 30 8% 22%;
+    --input: 30 8% 22%;
+    --ring: 42 30% 92%;
   }
 }
 
@@ -51,5 +71,171 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: var(--font-body, ui-sans-serif, system-ui), sans-serif;
+    font-feature-settings: "ss01", "ss02", "cv11";
   }
+  ::selection {
+    background-color: hsl(var(--proof) / 0.22);
+    color: hsl(var(--ink, var(--foreground)));
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.6);
+  }
+}
+
+@layer components {
+  /* ------------------------------------------------------------------------
+   * Editorial typography helpers
+   * ---------------------------------------------------------------------- */
+  .font-display {
+    font-family: var(--font-display, "Fraunces", "Source Serif Pro", Georgia, serif);
+    font-feature-settings: "ss01", "ss03", "swsh";
+    letter-spacing: -0.02em;
+  }
+  .font-body {
+    font-family: var(--font-body, "Inter Tight", ui-sans-serif, system-ui), sans-serif;
+  }
+  .font-mono {
+    font-family: var(--font-mono, "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace);
+  }
+
+  /* Eyebrow caption — small uppercase mono with a leading rule */
+  .eyebrow {
+    font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: hsl(var(--muted-foreground));
+  }
+
+  /* Section index number — large mono numeral used as a structural marker */
+  .index-num {
+    font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+    font-feature-settings: "tnum", "ss01";
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    color: hsl(var(--proof));
+  }
+
+  /* Hairline rule */
+  .hairline {
+    height: 1px;
+    background: hsl(var(--border));
+  }
+
+  /* "Marked" word — proof red underline that draws on hover/focus */
+  .proof-mark {
+    background-image: linear-gradient(
+      to right,
+      hsl(var(--proof) / 0.85),
+      hsl(var(--proof) / 0.85)
+    );
+    background-repeat: no-repeat;
+    background-size: 100% 1.5px;
+    background-position: 0 100%;
+    padding-bottom: 1px;
+  }
+
+  /* Reusable shimmer for streaming labels */
+  .shimmer-text {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted-foreground) / 0.4) 0%,
+      hsl(var(--foreground)) 50%,
+      hsl(var(--muted-foreground) / 0.4) 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer 2.4s linear infinite;
+  }
+
+  .stagger-item {
+    animation: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  /* Caret used in the typewriter animation */
+  .typewriter-caret {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: hsl(var(--proof));
+    margin-left: 2px;
+    transform: translateY(2px);
+    animation: caret-blink 1s steps(2) infinite;
+  }
+
+  /* Wavy proof underline (drawn live) */
+  .squiggle {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 4'><path d='M0 2 Q 1.5 0 3 2 T 6 2 T 9 2 T 12 2' fill='none' stroke='%23C8362B' stroke-width='1' stroke-linecap='round'/></svg>");
+    background-repeat: repeat-x;
+    background-position: 0 100%;
+    background-size: 12px 4px;
+    padding-bottom: 4px;
+  }
+}
+
+@layer utilities {
+  /* Light grain — barely visible; gives the paper its tooth without being noisy */
+  .bg-grain {
+    background-image:
+      radial-gradient(hsl(var(--ink, var(--foreground)) / 0.025) 1px, transparent 1px);
+    background-size: 3px 3px;
+  }
+
+  /* Vertical margin rule used on editorial layouts */
+  .margin-rule {
+    background-image: linear-gradient(
+      to right,
+      hsl(var(--rule-light)) 0,
+      hsl(var(--rule-light)) 1px,
+      transparent 1px,
+      transparent 100%
+    );
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  10%,30%,50%,70%,90% { transform: translateX(-3px); }
+  20%,40%,60%,80% { transform: translateX(3px); }
+}
+@keyframes caret-blink {
+  50% { background: transparent; }
+}
+@keyframes draw-underline {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes draw-circle {
+  from { stroke-dashoffset: 360; }
+  to   { stroke-dashoffset: 0; }
 }
