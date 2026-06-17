@@ -71,7 +71,7 @@ function Sheet({ loop }: { loop: number }) {
       </Row>
       <Row line="02" emphasis>
         <h2 className="font-display text-[34px] leading-[1.05] tracking-tight text-foreground">
-          Wei <span className="italic font-light">Yiven</span>
+          Xiao <span className="italic font-light">Ming</span>
         </h2>
       </Row>
       <Row line="03">
@@ -89,7 +89,7 @@ function Sheet({ loop }: { loop: number }) {
         <p className="flex items-baseline justify-between gap-4 font-display text-[18px] leading-tight text-foreground">
           <span>Acme Corp.</span>
           <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-            2022 — now
+            2026 — now
           </span>
         </p>
       </Row>

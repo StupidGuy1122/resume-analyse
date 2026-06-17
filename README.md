@@ -9,6 +9,27 @@
 └───────────────────────────────┘    └───────────────────────┘    └────────────────────┘
 ```
 
+## 演示
+
+完整流程演示（登录 → 上传 → 流式分析 → 模拟面试 → 评估报告）：
+
+<video src="assets/demonstration.mp4" controls width="800" muted playsinline></video>
+
+> GitHub 不渲染 `<video>` 标签时，可以直接[下载视频文件](assets/demonstration.mp4)观看。
+
+## 前端：编辑室美学
+
+视觉语言对应"AI 给简历做批注"这件事本身：
+
+- **配色**：奶油纸 `#F5F2E9` / 墨黑 `#1A1612` / 校对红 `#C8362B` / 蓝铅笔 `#1E3A8A` / 高亮琥珀 `#C58A2E`
+- **字体**：`Fraunces`（带 opsz 与 SOFT 轴的 variable serif）作 display / `Inter Tight` 正文 / `JetBrains Mono` 标签与数字；display 默认关 swsh，hero 处用 `font-display-swash` 选择性打开
+- **三个核心页面**：
+  - `/login` — 50/50：左半屏是一份正在被实时校对的简历样张（AI 编辑逐句打字，再用红色波浪线、红色椭圆圈、琥珀高亮、删除线四种 mark 配上 margin note 标注）；右半屏极简登录表单
+  - `/` — 上传页 hero "Drop your résumé. The editor will be in shortly."；drop-zone 包成黑色"INK-01 稿件登记表"，右栏是流程编号 01 / 02 / 03
+  - `/analyze/[id]` — 50/50：左侧带行号的简历原稿预览，右侧 Edits / Questions tab；**hover 一条改进建议时左侧自动滚到对应行 + 琥珀高亮 + 红色波浪线**
+
+设计 token 在 `frontend/app/globals.css`。
+
 ## 功能特性
 
 ### 简历分析
